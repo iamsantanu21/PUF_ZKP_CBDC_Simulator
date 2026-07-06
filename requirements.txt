@@ -1,0 +1,6 @@
+cryptography>=46.0.0
+streamlit>=1.45.0
+matplotlib>=3.10.0
+pandas>=2.2.0
+numpy>=2.2.0
+plotly>=6.0.0
