@@ -1,0 +1,254 @@
+{
+ "multi_seed": {
+  "seeds": [
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   48,
+   49,
+   50,
+   51
+  ],
+  "per_seed": [
+   {
+    "seed": 42,
+    "n_tx": 100,
+    "success": 94,
+    "locked": 5,
+    "failed": 1,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 5,
+     "R_MAX exceeded (\u20b9403+\u20b9160 > \u20b9500)": 1
+    },
+    "syncs": 45,
+    "mean_latency_ms": 30.267067964438013,
+    "mean_arm_ms_v2": 235.90603155596636,
+    "mean_tokens": 4.829787234042553
+   },
+   {
+    "seed": 43,
+    "n_tx": 100,
+    "success": 94,
+    "locked": 5,
+    "failed": 1,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 5,
+     "S_MAX exceeded (\u20b9438+\u20b9175 > \u20b9500)": 1
+    },
+    "syncs": 46,
+    "mean_latency_ms": 28.48583173772532,
+    "mean_arm_ms_v2": 237.58858079488354,
+    "mean_tokens": 5.4361702127659575
+   },
+   {
+    "seed": 44,
+    "n_tx": 100,
+    "success": 92,
+    "locked": 4,
+    "failed": 4,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 4,
+     "R_MAX exceeded (\u20b9389+\u20b9134 > \u20b9500)": 1,
+     "S_MAX exceeded (\u20b9461+\u20b966 > \u20b9500)": 1,
+     "S_MAX exceeded (\u20b9397+\u20b9132 > \u20b9500)": 1,
+     "R_MAX exceeded (\u20b9344+\u20b9178 > \u20b9500)": 1
+    },
+    "syncs": 46,
+    "mean_latency_ms": 28.824559741820007,
+    "mean_arm_ms_v2": 240.61434936824193,
+    "mean_tokens": 5.3478260869565215
+   },
+   {
+    "seed": 45,
+    "n_tx": 100,
+    "success": 92,
+    "locked": 4,
+    "failed": 4,
+    "failure_breakdown": {
+     "S_MAX exceeded (\u20b9429+\u20b9189 > \u20b9500)": 1,
+     "ACK lost (tokens locked)": 4,
+     "R_MAX exceeded (\u20b9432+\u20b9170 > \u20b9500)": 1,
+     "S_MAX exceeded (\u20b9333+\u20b9174 > \u20b9500)": 1,
+     "S_MAX exceeded (\u20b9495+\u20b9112 > \u20b9500)": 1
+    },
+    "syncs": 46,
+    "mean_latency_ms": 28.916558558866484,
+    "mean_arm_ms_v2": 248.78831970985007,
+    "mean_tokens": 5.728260869565218
+   },
+   {
+    "seed": 46,
+    "n_tx": 100,
+    "success": 94,
+    "locked": 4,
+    "failed": 2,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 4,
+     "R_MAX exceeded (\u20b9354+\u20b9156 > \u20b9500)": 1,
+     "S_MAX exceeded (\u20b9340+\u20b9199 > \u20b9500)": 1
+    },
+    "syncs": 46,
+    "mean_latency_ms": 27.54617801169227,
+    "mean_arm_ms_v2": 203.78191370338675,
+    "mean_tokens": 4.372340425531915
+   },
+   {
+    "seed": 47,
+    "n_tx": 100,
+    "success": 95,
+    "locked": 4,
+    "failed": 1,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 4,
+     "S_MAX exceeded (\u20b9331+\u20b9181 > \u20b9500)": 1
+    },
+    "syncs": 47,
+    "mean_latency_ms": 28.871917708169846,
+    "mean_arm_ms_v2": 248.41720417927635,
+    "mean_tokens": 5.810526315789474
+   },
+   {
+    "seed": 48,
+    "n_tx": 100,
+    "success": 96,
+    "locked": 4,
+    "failed": 0,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 4
+    },
+    "syncs": 46,
+    "mean_latency_ms": 27.500780575868752,
+    "mean_arm_ms_v2": 208.34512204834252,
+    "mean_tokens": 4.5625
+   },
+   {
+    "seed": 49,
+    "n_tx": 100,
+    "success": 94,
+    "locked": 4,
+    "failed": 2,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 4,
+     "R_MAX exceeded (\u20b9410+\u20b9123 > \u20b9500)": 1,
+     "S_MAX exceeded (\u20b9341+\u20b9166 > \u20b9500)": 1
+    },
+    "syncs": 46,
+    "mean_latency_ms": 28.15836665503013,
+    "mean_arm_ms_v2": 226.92800219582847,
+    "mean_tokens": 5.138297872340425
+   },
+   {
+    "seed": 50,
+    "n_tx": 100,
+    "success": 94,
+    "locked": 4,
+    "failed": 2,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 4,
+     "R_MAX exceeded (\u20b9372+\u20b9130 > \u20b9500)": 1,
+     "S_MAX exceeded (\u20b9389+\u20b9131 > \u20b9500)": 1
+    },
+    "syncs": 48,
+    "mean_latency_ms": 28.691749034598093,
+    "mean_arm_ms_v2": 235.63447988305361,
+    "mean_tokens": 5.297872340425532
+   },
+   {
+    "seed": 51,
+    "n_tx": 100,
+    "success": 90,
+    "locked": 4,
+    "failed": 6,
+    "failure_breakdown": {
+     "ACK lost (tokens locked)": 4,
+     "S_MAX exceeded (\u20b9440+\u20b9148 > \u20b9500)": 1,
+     "S_MAX exceeded (\u20b9401+\u20b9173 > \u20b9500)": 1,
+     "R_MAX exceeded (\u20b9390+\u20b9140 > \u20b9500)": 1,
+     "R_MAX exceeded (\u20b9441+\u20b9132 > \u20b9500)": 1,
+     "R_MAX exceeded (\u20b9476+\u20b9154 > \u20b9500)": 1,
+     "R_MAX exceeded (\u20b9334+\u20b9197 > \u20b9500)": 1
+    },
+    "syncs": 44,
+    "mean_latency_ms": 27.88294961914588,
+    "mean_arm_ms_v2": 218.3366442051464,
+    "mean_tokens": 4.888888888888889
+   }
+  ],
+  "success": {
+   "mean": 93.5,
+   "std": 1.7159383568311668,
+   "min": 90,
+   "max": 96
+  },
+  "locked": {
+   "mean": 4.2,
+   "std": 0.4216370213557839,
+   "min": 4,
+   "max": 5
+  },
+  "failed": {
+   "mean": 2.3,
+   "std": 1.8287822299126937,
+   "min": 0,
+   "max": 6
+  },
+  "syncs": {
+   "mean": 46,
+   "std": 1.0540925533894598,
+   "min": 44,
+   "max": 48
+  },
+  "mean_latency_ms": {
+   "mean": 28.51459596073548,
+   "std": 0.8151503201962121,
+   "min": 27.500780575868752,
+   "max": 30.267067964438013
+  },
+  "mean_arm_ms_v2": {
+   "mean": 230.4340647643976,
+   "std": 15.73736747522342,
+   "min": 203.78191370338675,
+   "max": 248.78831970985007
+  },
+  "mean_tokens": {
+   "mean": 5.1412470246306485,
+   "std": 0.4753445666206523,
+   "min": 4.372340425531915,
+   "max": 5.810526315789474
+  },
+  "failure_totals": {
+   "ACK lost (tokens locked)": 42,
+   "R_MAX exceeded (\u20b9403+\u20b9160 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9438+\u20b9175 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9389+\u20b9134 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9461+\u20b966 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9397+\u20b9132 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9344+\u20b9178 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9429+\u20b9189 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9432+\u20b9170 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9333+\u20b9174 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9495+\u20b9112 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9354+\u20b9156 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9340+\u20b9199 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9331+\u20b9181 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9410+\u20b9123 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9341+\u20b9166 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9372+\u20b9130 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9389+\u20b9131 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9440+\u20b9148 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9401+\u20b9173 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9390+\u20b9140 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9441+\u20b9132 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9476+\u20b9154 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9334+\u20b9197 > \u20b9500)": 1
+  }
+ },
+ "rep": {
+  "mean_latency_ms": 28.320274569940377,
+  "mean_arm_v2_ms": 222.36643918522375,
+  "mean_tokens": 4.829787234042553
+ }
+}

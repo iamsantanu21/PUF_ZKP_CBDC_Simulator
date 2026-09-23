@@ -10,6 +10,11 @@ SHA-256, HKDF via the OpenSSL-backed `cryptography` library) and a
 projected to ARM Cortex-M4 with per-primitive scaling factors (87× for ECC,
 10× for hardware-accelerated symmetric crypto, 1× for BLE air time).
 
+**v3 (paper revision):** the pure-Python Schnorr/Pedersen code is now costed at
+the speed of the same scalar multiplications in C, and BLE air time uses the
+compact binary size of each message. A 5-token payment projects to **≈0.22 s**
+on ARM Cortex-M4 (1,386 B over BLE). See [`CHANGES_v3.md`](CHANGES_v3.md).
+
 ## Files
 
 | File | Purpose |
@@ -18,7 +23,11 @@ projected to ARM Cortex-M4 with per-primitive scaling factors (87× for ECC,
 | `dashboard.py` | Interactive Streamlit dashboard (screenshots below) |
 | `figure_generator.py` | General matplotlib figure export |
 | `paper_experiments.py` | One-command regeneration of the paper's result figures (fig7, fig10, fig12) + `stats.json` from the 10-seed experiment |
-| `paper_figures_v2/` | Latest paper figures + multi-seed statistics (`ms.json`) |
+| `run_results.py` | Reproduces every number reported in the paper (outcomes, crypto table, latency vs. token count, BLE size, energy, PUF) → `results.json` + `summary.txt` |
+| `CHANGES_v3.md` | What changed in v3 and why, with before/after results |
+| `results_v3_mac/`, `results_original_mac/` | Paper numbers from the v3 and the original code (Apple Silicon) |
+| `paper_figures_v3/` | Paper figures regenerated with v3 |
+| `paper_figures_v2/` | Previous figures + multi-seed statistics (`ms.json`) |
 | `docs/screenshots/` | Dashboard screenshots used in this README |
 
 ## Setup & Run
@@ -32,7 +41,10 @@ pip install -r requirements.txt
 streamlit run dashboard.py
 
 # Regenerate paper figures (10 seeds × 100 transactions)
-python3 paper_experiments.py
+python3 paper_experiments.py paper_figures_v3
+
+# Reproduce all numbers reported in the paper
+python3 run_results.py results_v3
 ```
 
 ## Key engine options (v2)
@@ -50,7 +62,11 @@ python3 paper_experiments.py
 - `run_multi_seed(config, seeds)` — statistical runs; the paper uses seeds
   42–51 (1,000 transactions total → 93.5 ± 1.7% success).
 - `arm_projected_ms(tx_record)` — per-primitive ARM Cortex-M4 latency
-  projection including the analytical SE050 I/O model.
+  projection including the analytical SE050 I/O model. **v3:** Schnorr and
+  Pedersen are costed at C-equivalent speed (`c_equiv_ecc_us`); the previous
+  projection is kept as `arm_projected_ms_python()`.
+- `wire_size(message)` — **v3:** compact binary message size used for BLE air
+  time (raw keys/proofs, 1-byte denomination, 4-byte integers).
 
 ---
 

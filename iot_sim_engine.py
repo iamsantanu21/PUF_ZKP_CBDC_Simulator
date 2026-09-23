@@ -23,6 +23,7 @@ import hmac
 import json
 import os
 import random
+import re
 import statistics
 import time
 import uuid
@@ -67,6 +68,35 @@ def se050_io_us(n_tokens: int) -> float:
     """Analytical SE050 I/O time for one transaction (sender deletes n,
     receiver stores n, both touch counters/session)."""
     return 2 * SE050_IO_US["session"] + n_tokens * (SE050_IO_US["delete"] + SE050_IO_US["write"])
+
+
+# ── v3: compact binary wire size for BLE messages ──────────────────
+# The simulator exchanges JSON with hex strings for convenience; device firmware
+# sends raw bytes. BLE air time is therefore costed on the binary encoding:
+# hex fields -> raw bytes, denomination -> 1 B, other integers -> 4 B,
+# identifiers -> UTF-8 bytes, JSON keys and punctuation not transmitted.
+_HEX_RE = re.compile(r"^[0-9a-f]+$")
+AES_GCM_OVERHEAD = 12 + 16  # nonce + tag
+
+
+def wire_size(obj, key: str = "") -> int:
+    if isinstance(obj, dict):
+        return sum(wire_size(v, k) for k, v in obj.items())
+    if isinstance(obj, (list, tuple)):
+        return sum(wire_size(v, key) for v in obj)
+    if isinstance(obj, bool):
+        return 1
+    if isinstance(obj, int):
+        return 1 if key == "denomination" else 4
+    if isinstance(obj, float):
+        return 8
+    if isinstance(obj, (bytes, bytearray)):
+        return len(obj)
+    if isinstance(obj, str):
+        if len(obj) >= 16 and len(obj) % 2 == 0 and _HEX_RE.match(obj):
+            return len(obj) // 2
+        return len(obj.encode())
+    return 0
 
 
 # ===================================================================
@@ -505,10 +535,12 @@ class BLETransport:
     def force_drop_next_ack(self):
         self._force_drop_ack = True
 
-    def send(self, msg_type: str, payload: dict) -> Tuple[Optional[dict], float, int]:
-        """Returns (payload_or_None, ble_time_us, payload_bytes)."""
-        raw = json.dumps(payload, separators=(",", ":")).encode()
-        n_bytes = len(raw)
+    def send(self, msg_type: str, payload: dict, wire_bytes: Optional[int] = None) -> Tuple[Optional[dict], float, int]:
+        """Returns (payload_or_None, ble_time_us, payload_bytes).
+        v3: payload_bytes is the compact binary size (see wire_size); the JSON
+        size is kept in json_bytes for reference."""
+        self.json_bytes = getattr(self, "json_bytes", 0) + len(json.dumps(payload, separators=(",", ":")).encode())
+        n_bytes = wire_bytes if wire_bytes is not None else wire_size(payload)
         n_frames = max(1, (n_bytes + self.MTU - 1) // self.MTU)
         ble_time_us = (n_bytes * 8 / self.PHY_RATE) * 1_000_000 + n_frames * 150  # 150 µs IFS
 
@@ -916,13 +948,14 @@ def run_transaction(
     timing["hkdf"] = t_hkdf.elapsed_us
 
     # ── AES-256-GCM encrypt ─────────────────────────────────────
-    payload_plain = json.dumps({
+    plain_obj = {
         "tx_id": tx_id,
         "seq_no": next_seq,
         "tokens": token_wire,
         "amount": amount,
         "blinding": blinding.hex(),
-    }).encode()
+    }
+    payload_plain = json.dumps(plain_obj).encode()
 
     with Timer() as t_enc:
         nonce, ct, tag = aes_gcm_encrypt(session_key, payload_plain)
@@ -937,7 +970,9 @@ def run_transaction(
         "sender_x_pk": sender.x_pk.hex(),
         "timestamp": now_ts,
     }
-    msg4_result, ble4_us, ble4_bytes = transport.send("msg4_payload", msg4)
+    msg4_wire = (wire_size(plain_obj) + AES_GCM_OVERHEAD
+                 + wire_size({k: v for k, v in msg4.items() if k not in ("nonce", "ciphertext", "tag")}))
+    msg4_result, ble4_us, ble4_bytes = transport.send("msg4_payload", msg4, wire_bytes=msg4_wire)
     ble_total_us += ble4_us
     total_payload += ble4_bytes
     if msg4_result is None:
@@ -1143,13 +1178,68 @@ def _estimate_ram(n_tokens: int) -> int:
     return 892 + 329 * n_tokens
 
 
-def arm_projected_ms(rec: "TxRecord") -> float:
-    """v2: per-primitive ARM Cortex-M4 projection for one transaction.
-    ECC ops x87, symmetric ops x10 (HW accel), BLE x1, plus analytical
-    SE050 I/O. Replaces the legacy uniform x87 projection."""
+# ── v3: C-equivalent costing of the pure-Python EC code ─────────────
+# The 87x ECC factor is a C-vs-C ratio (micro-ecc on Cortex-M4 vs. the host).
+# Schnorr and Pedersen are written in pure Python here, which is far slower
+# than the C code a device would run, so scaling their Python time by 87x
+# overstates the ARM cost. They are costed instead as the same number of
+# scalar multiplications in the C (OpenSSL) implementation on the same host:
+#   single (one fixed-base scalar mult)      ~ Ed25519 sign
+#   double (s*B + e*A double-scalar mult)    ~ Ed25519 verify
+_C_EQ: Dict[str, float] = {}
+
+
+def c_equiv_scalar_mult_us() -> Tuple[float, float]:
+    if not _C_EQ:
+        sk = ed25519.Ed25519PrivateKey.generate()
+        pk = sk.public_key()
+        m = b"c-equivalent calibration message"
+        sg = sk.sign(m)
+
+        def med(fn, n=400):
+            for _ in range(50):
+                fn()
+            ts = []
+            for _ in range(n):
+                t0 = time.perf_counter()
+                fn()
+                ts.append((time.perf_counter() - t0) * 1_000_000)
+            return statistics.median(ts)
+        _C_EQ["single"] = med(lambda: sk.sign(m))
+        _C_EQ["double"] = med(lambda: pk.verify(sg, m))
+    return _C_EQ["single"], _C_EQ["double"]
+
+
+def c_equiv_ecc_us(rec: "TxRecord") -> float:
+    """C-equivalent host time of the pure-Python Schnorr/Pedersen work in one
+    transaction: 2 Schnorr proves (single), 2 Schnorr verifies (double),
+    Pedersen commit and re-commit (r*B single; the 8-bit v*H is negligible)."""
+    single, double = c_equiv_scalar_mult_us()
+    n_prove = 2 if rec.schnorr_prove_us > 0 else 0
+    n_verify = 2 if rec.schnorr_verify_us > 0 else 0
+    n_ped = (1 if rec.pedersen_commit_us > 0 else 0) + (1 if rec.pedersen_verify_us > 0 else 0)
+    return n_prove * single + n_verify * double + n_ped * single
+
+
+def arm_projected_ms_python(rec: "TxRecord") -> float:
+    """v2 projection (kept for comparison): scales the Python Schnorr/Pedersen time by 87x."""
     ecc_us = (rec.schnorr_prove_us + rec.schnorr_verify_us + rec.ecdh_us
               + rec.cb_verify_us + rec.transfer_sign_us + rec.transfer_verify_us
               + rec.pedersen_commit_us + rec.pedersen_verify_us)
+    sym_us = (rec.puf_boot_us + rec.encrypt_us + rec.decrypt_us + rec.hkdf_us
+              + rec.compliance_us + rec.token_select_us)
+    return (ecc_us * ARM_SCALE_FACTORS["ecc"]
+            + sym_us * ARM_SCALE_FACTORS["sym"]
+            + rec.ble_us * ARM_SCALE_FACTORS["ble"]
+            + rec.se_io_us) / 1000.0
+
+
+def arm_projected_ms(rec: "TxRecord") -> float:
+    """v3: per-primitive ARM Cortex-M4 projection for one transaction.
+    ECC ops x87 (Schnorr/Pedersen at C-equivalent cost), symmetric ops x10
+    (HW accel), BLE x1 (binary wire size), plus analytical SE050 I/O."""
+    ecc_us = (c_equiv_ecc_us(rec) + rec.ecdh_us
+              + rec.cb_verify_us + rec.transfer_sign_us + rec.transfer_verify_us)
     sym_us = (rec.puf_boot_us + rec.encrypt_us + rec.decrypt_us + rec.hkdf_us
               + rec.compliance_us + rec.token_select_us)
     return (ecc_us * ARM_SCALE_FACTORS["ecc"]
@@ -1214,8 +1304,22 @@ def run_crypto_benchmark(iterations: int = 100) -> Dict[str, Dict[str, float]]:
         results[name] = {
             "mean_us": statistics.mean(times),
             "std_us": statistics.stdev(times) if len(times) > 1 else 0,
-            "arm_us": statistics.mean(times) * ARM_SCALE_FACTOR,
+            "arm_us_uniform87": statistics.mean(times) * ARM_SCALE_FACTOR,
         }
+    # v3: ARM estimate with the per-primitive factors; pure-Python Schnorr and
+    # Pedersen at the cost of their scalar multiplications in C.
+    single, double = c_equiv_scalar_mult_us()
+    c_eq = {"Schnorr prove": single, "Schnorr verify": double,
+            "Pedersen commit": single, "Pedersen verify": single}
+    sym_ops = ("SHA-256 (32 B)", "HKDF (RFC 5869)", "AES-256-GCM enc (1KB)", "AES-256-GCM dec (1KB)")
+    for name, r in results.items():
+        if name in c_eq:
+            r["c_equiv_us"] = c_eq[name]
+            r["arm_us"] = c_eq[name] * ARM_SCALE_FACTORS["ecc"]
+        elif name in sym_ops:
+            r["arm_us"] = r["mean_us"] * ARM_SCALE_FACTORS["sym"]
+        else:
+            r["arm_us"] = r["mean_us"] * ARM_SCALE_FACTORS["ecc"]
     return results
 
 
