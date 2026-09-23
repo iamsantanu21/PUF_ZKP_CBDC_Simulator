@@ -1,0 +1,819 @@
+{
+ "engine": "v4",
+ "host": "Linux-6.8.0-138-generic-aarch64-with-glibc2.35",
+ "machine": "aarch64",
+ "python": "3.10.12",
+ "crypto_bench": {
+  "SHA-256 (32 B)": {
+   "mean_us": 0.964695937000215,
+   "std_us": 1.0098447311684315,
+   "arm_us_uniform87": 83.92854651901871,
+   "arm_us": 9.64695937000215
+  },
+  "HKDF (RFC 5869)": {
+   "mean_us": 7.329709478653967,
+   "std_us": 10.333540724490023,
+   "arm_us_uniform87": 637.6847246428952,
+   "arm_us": 73.29709478653967
+  },
+  "Ed25519 keygen": {
+   "mean_us": 50.39041988008345,
+   "std_us": 28.736219536194945,
+   "arm_us_uniform87": 4383.96652956726,
+   "arm_us": 4383.96652956726
+  },
+  "Ed25519 sign": {
+   "mean_us": 45.05185982755696,
+   "std_us": 14.017271053374953,
+   "arm_us_uniform87": 3919.5118049974553,
+   "arm_us": 3919.5118049974553
+  },
+  "Ed25519 verify": {
+   "mean_us": 140.28876796752834,
+   "std_us": 24.869059758965342,
+   "arm_us_uniform87": 12205.122813174967,
+   "arm_us": 12205.122813174967
+  },
+  "X25519 keygen": {
+   "mean_us": 47.55250391705582,
+   "std_us": 12.713656209541806,
+   "arm_us_uniform87": 4137.067840783857,
+   "arm_us": 4137.067840783857
+  },
+  "ECDH shared secret": {
+   "mean_us": 55.50498375669122,
+   "std_us": 12.605831832264604,
+   "arm_us_uniform87": 4828.933586832136,
+   "arm_us": 4828.933586832136
+  },
+  "AES-256-GCM enc (1KB)": {
+   "mean_us": 10.30110065282012,
+   "std_us": 10.732767134901783,
+   "arm_us_uniform87": 896.1957567953505,
+   "arm_us": 103.0110065282012
+  },
+  "AES-256-GCM dec (1KB)": {
+   "mean_us": 6.836760924973835,
+   "std_us": 0.8363720920088503,
+   "arm_us_uniform87": 594.7982004727237,
+   "arm_us": 68.36760924973835
+  },
+  "Schnorr prove": {
+   "mean_us": 2388.490949233528,
+   "std_us": 152.8520233491649,
+   "arm_us_uniform87": 207798.71258331696,
+   "c_equiv_us": 41.37499490752816,
+   "arm_us": 3599.62455695495
+  },
+  "Schnorr verify": {
+   "mean_us": 5115.153166892317,
+   "std_us": 151.52320933101478,
+   "arm_us_uniform87": 445018.3255196316,
+   "c_equiv_us": 128.70899809058756,
+   "arm_us": 11197.682833881117
+  },
+  "Pedersen commit": {
+   "mean_us": 2433.913620576883,
+   "std_us": 188.72089612099037,
+   "arm_us_uniform87": 211750.48499018885,
+   "c_equiv_us": 41.37499490752816,
+   "arm_us": 3599.62455695495
+  },
+  "Pedersen verify": {
+   "mean_us": 3356.6321905042664,
+   "std_us": 2340.4429929459434,
+   "arm_us_uniform87": 292027.0005738712,
+   "c_equiv_us": 41.37499490752816,
+   "arm_us": 3599.62455695495
+  }
+ },
+ "multi_seed": {
+  "seeds": [
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   48,
+   49,
+   50,
+   51
+  ],
+  "success": {
+   "mean": 93.5,
+   "std": 1.7159383568311668,
+   "min": 90,
+   "max": 96
+  },
+  "locked": {
+   "mean": 4.2,
+   "std": 0.4216370213557839,
+   "min": 4,
+   "max": 5
+  },
+  "failed": {
+   "mean": 2.3,
+   "std": 1.8287822299126937,
+   "min": 0,
+   "max": 6
+  },
+  "syncs": {
+   "mean": 46,
+   "std": 1.0540925533894598,
+   "min": 44,
+   "max": 48
+  },
+  "mean_latency_ms": {
+   "mean": 29.335204663815777,
+   "std": 0.7601181152821842,
+   "min": 28.376034035522352,
+   "max": 30.7786735125459
+  },
+  "mean_arm_ms_v2": {
+   "mean": 233.54179052765988,
+   "std": 15.286601574131723,
+   "min": 213.56307879583213,
+   "max": 255.02708597722884
+  },
+  "mean_mcu_ms_nrf52840": {
+   "mean": 490.41903307505834,
+   "std": 26.143513176276226,
+   "min": 448.36877754292084,
+   "max": 527.6866579004834
+  },
+  "mean_mcu_ms_esp32": {
+   "mean": 814.8894605470497,
+   "std": 42.74360756080474,
+   "min": 745.8181775306348,
+   "max": 875.2426470623983
+  },
+  "mean_tokens": {
+   "mean": 5.1412470246306485,
+   "std": 0.4753445666206523,
+   "min": 4.372340425531915,
+   "max": 5.810526315789474
+  },
+  "failure_totals": {
+   "ACK lost (tokens locked)": 42,
+   "R_MAX exceeded (\u20b9403+\u20b9160 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9438+\u20b9175 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9389+\u20b9134 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9461+\u20b966 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9397+\u20b9132 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9344+\u20b9178 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9429+\u20b9189 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9432+\u20b9170 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9333+\u20b9174 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9495+\u20b9112 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9354+\u20b9156 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9340+\u20b9199 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9331+\u20b9181 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9410+\u20b9123 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9341+\u20b9166 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9372+\u20b9130 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9389+\u20b9131 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9440+\u20b9148 > \u20b9500)": 1,
+   "S_MAX exceeded (\u20b9401+\u20b9173 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9390+\u20b9140 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9441+\u20b9132 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9476+\u20b9154 > \u20b9500)": 1,
+   "R_MAX exceeded (\u20b9334+\u20b9197 > \u20b9500)": 1
+  }
+ },
+ "multi_seed_per_seed": [
+  {
+   "seed": 42,
+   "n_tx": 100,
+   "success": 94,
+   "locked": 5,
+   "failed": 1,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 5,
+    "R_MAX exceeded (\u20b9403+\u20b9160 > \u20b9500)": 1
+   },
+   "syncs": 45,
+   "mean_latency_ms": 28.376034035522352,
+   "mean_arm_ms_v2": 220.1679826299334,
+   "mean_mcu_ms_nrf52840": 472.37679357933126,
+   "mean_mcu_ms_esp32": 786.6313844373286,
+   "mean_tokens": 4.829787234042553
+  },
+  {
+   "seed": 43,
+   "n_tx": 100,
+   "success": 94,
+   "locked": 5,
+   "failed": 1,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 5,
+    "S_MAX exceeded (\u20b9438+\u20b9175 > \u20b9500)": 1
+   },
+   "syncs": 46,
+   "mean_latency_ms": 29.107765051282566,
+   "mean_arm_ms_v2": 241.2868320062751,
+   "mean_mcu_ms_nrf52840": 505.38530759484166,
+   "mean_mcu_ms_esp32": 841.0332975420606,
+   "mean_tokens": 5.4361702127659575
+  },
+  {
+   "seed": 44,
+   "n_tx": 100,
+   "success": 92,
+   "locked": 4,
+   "failed": 4,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 4,
+    "R_MAX exceeded (\u20b9389+\u20b9134 > \u20b9500)": 1,
+    "S_MAX exceeded (\u20b9461+\u20b966 > \u20b9500)": 1,
+    "S_MAX exceeded (\u20b9397+\u20b9132 > \u20b9500)": 1,
+    "R_MAX exceeded (\u20b9344+\u20b9178 > \u20b9500)": 1
+   },
+   "syncs": 46,
+   "mean_latency_ms": 28.971300279055498,
+   "mean_arm_ms_v2": 236.11655270800338,
+   "mean_mcu_ms_nrf52840": 501.0820682312132,
+   "mean_mcu_ms_esp32": 833.2392950321291,
+   "mean_tokens": 5.3478260869565215
+  },
+  {
+   "seed": 45,
+   "n_tx": 100,
+   "success": 92,
+   "locked": 4,
+   "failed": 4,
+   "failure_breakdown": {
+    "S_MAX exceeded (\u20b9429+\u20b9189 > \u20b9500)": 1,
+    "ACK lost (tokens locked)": 4,
+    "R_MAX exceeded (\u20b9432+\u20b9170 > \u20b9500)": 1,
+    "S_MAX exceeded (\u20b9333+\u20b9174 > \u20b9500)": 1,
+    "S_MAX exceeded (\u20b9495+\u20b9112 > \u20b9500)": 1
+   },
+   "syncs": 46,
+   "mean_latency_ms": 30.7786735125459,
+   "mean_arm_ms_v2": 251.7953322333305,
+   "mean_mcu_ms_nrf52840": 523.1793230951798,
+   "mean_mcu_ms_esp32": 867.8214660214652,
+   "mean_tokens": 5.728260869565218
+  },
+  {
+   "seed": 46,
+   "n_tx": 100,
+   "success": 94,
+   "locked": 4,
+   "failed": 2,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 4,
+    "R_MAX exceeded (\u20b9354+\u20b9156 > \u20b9500)": 1,
+    "S_MAX exceeded (\u20b9340+\u20b9199 > \u20b9500)": 1
+   },
+   "syncs": 46,
+   "mean_latency_ms": 28.788436171651202,
+   "mean_arm_ms_v2": 213.56307879583213,
+   "mean_mcu_ms_nrf52840": 448.36877754292084,
+   "mean_mcu_ms_esp32": 745.8181775306348,
+   "mean_tokens": 4.372340425531915
+  },
+  {
+   "seed": 47,
+   "n_tx": 100,
+   "success": 95,
+   "locked": 4,
+   "failed": 1,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 4,
+    "S_MAX exceeded (\u20b9331+\u20b9181 > \u20b9500)": 1
+   },
+   "syncs": 47,
+   "mean_latency_ms": 29.88373731077284,
+   "mean_arm_ms_v2": 255.02708597722884,
+   "mean_mcu_ms_nrf52840": 527.6866579004834,
+   "mean_mcu_ms_esp32": 875.2426470623983,
+   "mean_tokens": 5.810526315789474
+  },
+  {
+   "seed": 48,
+   "n_tx": 100,
+   "success": 96,
+   "locked": 4,
+   "failed": 0,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 4
+   },
+   "syncs": 46,
+   "mean_latency_ms": 29.832253701367687,
+   "mean_arm_ms_v2": 215.487287178405,
+   "mean_mcu_ms_nrf52840": 459.5764318081754,
+   "mean_mcu_ms_esp32": 763.1045254270052,
+   "mean_tokens": 4.5625
+  },
+  {
+   "seed": 49,
+   "n_tx": 100,
+   "success": 94,
+   "locked": 4,
+   "failed": 2,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 4,
+    "R_MAX exceeded (\u20b9410+\u20b9123 > \u20b9500)": 1,
+    "S_MAX exceeded (\u20b9341+\u20b9166 > \u20b9500)": 1
+   },
+   "syncs": 46,
+   "mean_latency_ms": 28.84955373477583,
+   "mean_arm_ms_v2": 230.14597783579447,
+   "mean_mcu_ms_nrf52840": 490.0808863604058,
+   "mean_mcu_ms_esp32": 814.541411986922,
+   "mean_tokens": 5.138297872340425
+  },
+  {
+   "seed": 50,
+   "n_tx": 100,
+   "success": 94,
+   "locked": 4,
+   "failed": 2,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 4,
+    "R_MAX exceeded (\u20b9372+\u20b9130 > \u20b9500)": 1,
+    "S_MAX exceeded (\u20b9389+\u20b9131 > \u20b9500)": 1
+   },
+   "syncs": 48,
+   "mean_latency_ms": 30.062251072877324,
+   "mean_arm_ms_v2": 248.46257172026426,
+   "mean_mcu_ms_nrf52840": 500.4092206404861,
+   "mean_mcu_ms_esp32": 829.3440857672234,
+   "mean_tokens": 5.297872340425532
+  },
+  {
+   "seed": 51,
+   "n_tx": 100,
+   "success": 90,
+   "locked": 4,
+   "failed": 6,
+   "failure_breakdown": {
+    "ACK lost (tokens locked)": 4,
+    "S_MAX exceeded (\u20b9440+\u20b9148 > \u20b9500)": 1,
+    "S_MAX exceeded (\u20b9401+\u20b9173 > \u20b9500)": 1,
+    "R_MAX exceeded (\u20b9390+\u20b9140 > \u20b9500)": 1,
+    "R_MAX exceeded (\u20b9441+\u20b9132 > \u20b9500)": 1,
+    "R_MAX exceeded (\u20b9476+\u20b9154 > \u20b9500)": 1,
+    "R_MAX exceeded (\u20b9334+\u20b9197 > \u20b9500)": 1
+   },
+   "syncs": 44,
+   "mean_latency_ms": 28.702041768306575,
+   "mean_arm_ms_v2": 223.36520419153192,
+   "mean_mcu_ms_nrf52840": 476.0448639975458,
+   "mean_mcu_ms_esp32": 792.1183146633298,
+   "mean_tokens": 4.888888888888889
+  }
+ ],
+ "campaign_seconds": 24.48622155189514,
+ "five_token_mcu_breakdown_ms": {
+  "nrf52840": {
+   "ecc": 369.860453125,
+   "sym": 17.85614437832676,
+   "other": 6.574986400664784,
+   "ble_air": 6.894,
+   "se050": 17.5,
+   "flash": 14.924,
+   "ble_connect": 45.0,
+   "total": 478.6095839039915
+  },
+  "esp32": {
+   "ecc": 721.0,
+   "sym": 1.7270403571299997,
+   "other": 1.7533297068439424,
+   "ble_air": 6.894,
+   "se050": 17.5,
+   "flash": 7.699999999999999,
+   "ble_connect": 45.0,
+   "total": 801.574370063974
+  }
+ },
+ "scaling": [
+  {
+   "tokens": 1,
+   "measured_ms": 23.624996024807913,
+   "ble_ms": 3.58,
+   "compute_ms": 20.044996024807915,
+   "arm_ms": 92.32913726998493,
+   "measured_c_ms": 4.840541001101956,
+   "compute_c_ms": 1.2605410011019558,
+   "se_io_ms": 4.3,
+   "payload_bytes": 670,
+   "ble_frames": 6,
+   "ram_bytes": 1221,
+   "mcu_nrf52840_ms": 256.65501148602584,
+   "mcu_esp32_ms": 441.3922328008987
+  },
+  {
+   "tokens": 2,
+   "measured_ms": 24.863248080624267,
+   "ble_ms": 4.296,
+   "compute_ms": 20.567248080624267,
+   "arm_ms": 126.049714152053,
+   "measured_c_ms": 5.9089599243868145,
+   "compute_c_ms": 1.6129599243868142,
+   "se_io_ms": 7.6,
+   "payload_bytes": 849,
+   "ble_frames": 6,
+   "ram_bytes": 1550,
+   "mcu_nrf52840_ms": 312.3799719111451,
+   "mcu_esp32_ms": 530.718285068835
+  },
+  {
+   "tokens": 3,
+   "measured_ms": 26.15566608308628,
+   "ble_ms": 5.162,
+   "compute_ms": 20.993666083086282,
+   "arm_ms": 159.25240489499458,
+   "measured_c_ms": 7.1559610210713,
+   "compute_c_ms": 1.9939610210713,
+   "se_io_ms": 10.9,
+   "payload_bytes": 1028,
+   "ble_frames": 7,
+   "ram_bytes": 1879,
+   "mcu_nrf52840_ms": 367.8612524614316,
+   "mcu_esp32_ms": 621.4893560368157
+  },
+  {
+   "tokens": 4,
+   "measured_ms": 27.457454936878754,
+   "ble_ms": 6.028,
+   "compute_ms": 21.429454936878756,
+   "arm_ms": 190.13358526595124,
+   "measured_c_ms": 8.291500995468349,
+   "compute_c_ms": 2.2635009954683483,
+   "se_io_ms": 14.2,
+   "payload_bytes": 1207,
+   "ble_frames": 8,
+   "ram_bytes": 2208,
+   "mcu_nrf52840_ms": 423.2252376628178,
+   "mcu_esp32_ms": 710.8291482450899
+  },
+  {
+   "tokens": 5,
+   "measured_ms": 28.56057894849777,
+   "ble_ms": 6.894,
+   "compute_ms": 21.666578948497772,
+   "arm_ms": 222.1150410113912,
+   "measured_c_ms": 9.484877935290337,
+   "compute_c_ms": 2.5908779352903366,
+   "se_io_ms": 17.5,
+   "payload_bytes": 1386,
+   "ble_frames": 9,
+   "ram_bytes": 2537,
+   "mcu_nrf52840_ms": 478.6095839039915,
+   "mcu_esp32_ms": 801.574370063974
+  },
+  {
+   "tokens": 6,
+   "measured_ms": 29.281956026693805,
+   "ble_ms": 7.61,
+   "compute_ms": 21.671956026693806,
+   "arm_ms": 251.4841494859103,
+   "measured_c_ms": 10.493666922571137,
+   "compute_c_ms": 2.8836669225711375,
+   "se_io_ms": 20.8,
+   "payload_bytes": 1565,
+   "ble_frames": 9,
+   "ram_bytes": 2866,
+   "mcu_nrf52840_ms": 534.0142170209655,
+   "mcu_esp32_ms": 890.8150017164047
+  },
+  {
+   "tokens": 7,
+   "measured_ms": 30.559624004153534,
+   "ble_ms": 8.476,
+   "compute_ms": 22.083624004153535,
+   "arm_ms": 282.2167947910484,
+   "measured_c_ms": 11.658754007866607,
+   "compute_c_ms": 3.182754007866606,
+   "se_io_ms": 24.1,
+   "payload_bytes": 1744,
+   "ble_frames": 10,
+   "ram_bytes": 3195,
+   "mcu_nrf52840_ms": 589.1611120216024,
+   "mcu_esp32_ms": 980.0969032044791
+  },
+  {
+   "tokens": 8,
+   "measured_ms": 31.882540958289056,
+   "ble_ms": 9.342,
+   "compute_ms": 22.540540958289057,
+   "arm_ms": 314.51420561983997,
+   "measured_c_ms": 12.834708958219737,
+   "compute_c_ms": 3.492708958219737,
+   "se_io_ms": 27.4,
+   "payload_bytes": 1923,
+   "ble_frames": 11,
+   "ram_bytes": 3524,
+   "mcu_nrf52840_ms": 644.8391959476182,
+   "mcu_esp32_ms": 1072.3204550726543
+  },
+  {
+   "tokens": 9,
+   "measured_ms": 32.95070699839108,
+   "ble_ms": 10.058,
+   "compute_ms": 22.892706998391077,
+   "arm_ms": 347.1157277061995,
+   "measured_c_ms": 13.88841804889217,
+   "compute_c_ms": 3.83041804889217,
+   "se_io_ms": 30.7,
+   "payload_bytes": 2102,
+   "ble_frames": 11,
+   "ram_bytes": 3853,
+   "mcu_nrf52840_ms": 700.3203674093211,
+   "mcu_esp32_ms": 1161.5814969503463
+  },
+  {
+   "tokens": 10,
+   "measured_ms": 34.062790973462164,
+   "ble_ms": 10.924,
+   "compute_ms": 23.138790973462164,
+   "arm_ms": 381.3313061093222,
+   "measured_c_ms": 15.101960014203563,
+   "compute_c_ms": 4.177960014203563,
+   "se_io_ms": 34.0,
+   "payload_bytes": 2281,
+   "ble_frames": 12,
+   "ram_bytes": 4182,
+   "mcu_nrf52840_ms": 755.9125368278287,
+   "mcu_esp32_ms": 1250.982138283186
+  },
+  {
+   "tokens": 11,
+   "measured_ms": 35.4168749285955,
+   "ble_ms": 11.79,
+   "compute_ms": 23.626874928595498,
+   "arm_ms": 412.34762089109046,
+   "measured_c_ms": 16.2906679429207,
+   "compute_c_ms": 4.5006679429207,
+   "se_io_ms": 37.3,
+   "payload_bytes": 2460,
+   "ble_frames": 13,
+   "ram_bytes": 4511,
+   "mcu_nrf52840_ms": 811.185958184791,
+   "mcu_esp32_ms": 1341.697780132947
+  },
+  {
+   "tokens": 12,
+   "measured_ms": 37.01850093160197,
+   "ble_ms": 12.656,
+   "compute_ms": 24.36250093160197,
+   "arm_ms": 450.09921676031684,
+   "measured_c_ms": 17.527668003033845,
+   "compute_c_ms": 4.871668003033847,
+   "se_io_ms": 40.6,
+   "payload_bytes": 2639,
+   "ble_frames": 14,
+   "ram_bytes": 4840,
+   "mcu_nrf52840_ms": 866.848479928864,
+   "mcu_esp32_ms": 1431.1171820859374
+  },
+  {
+   "tokens": 13,
+   "measured_ms": 37.514458074493334,
+   "ble_ms": 13.372,
+   "compute_ms": 24.142458074493334,
+   "arm_ms": 476.1819569339305,
+   "measured_c_ms": 18.517251023350283,
+   "compute_c_ms": 5.1452510233502835,
+   "se_io_ms": 43.9,
+   "payload_bytes": 2818,
+   "ble_frames": 14,
+   "ram_bytes": 5169,
+   "mcu_nrf52840_ms": 922.3281147083185,
+   "mcu_esp32_ms": 1521.7778141816966
+  },
+  {
+   "tokens": 14,
+   "measured_ms": 38.73674993180856,
+   "ble_ms": 14.238,
+   "compute_ms": 24.49874993180856,
+   "arm_ms": 508.0306994453184,
+   "measured_c_ms": 19.69812696577236,
+   "compute_c_ms": 5.460126965772361,
+   "se_io_ms": 47.2,
+   "payload_bytes": 2997,
+   "ble_frames": 15,
+   "ram_bytes": 5498,
+   "mcu_nrf52840_ms": 977.5843215133636,
+   "mcu_esp32_ms": 1611.0888654842797
+  },
+  {
+   "tokens": 15,
+   "measured_ms": 40.04858405999467,
+   "ble_ms": 15.104,
+   "compute_ms": 24.944584059994668,
+   "arm_ms": 541.0225692290776,
+   "measured_c_ms": 20.927750951094552,
+   "compute_c_ms": 5.823750951094553,
+   "se_io_ms": 50.5,
+   "payload_bytes": 3176,
+   "ble_frames": 16,
+   "ram_bytes": 5827,
+   "mcu_nrf52840_ms": 1033.1873677609087,
+   "mcu_esp32_ms": 1700.4924073048628
+  },
+  {
+   "tokens": 20,
+   "measured_ms": 45.97212702889554,
+   "ble_ms": 19.134,
+   "compute_ms": 26.838127028895542,
+   "arm_ms": 716.5882287543882,
+   "measured_c_ms": 26.77554302305542,
+   "compute_c_ms": 7.641543023055419,
+   "se_io_ms": 67.0,
+   "payload_bytes": 4071,
+   "ble_frames": 19,
+   "ram_bytes": 7472,
+   "mcu_nrf52840_ms": 1310.8404212114483,
+   "mcu_esp32_ms": 2151.393535664529
+  },
+  {
+   "tokens": 30,
+   "measured_ms": 57.2508340100348,
+   "ble_ms": 27.344,
+   "compute_ms": 29.9068340100348,
+   "arm_ms": 1027.0367205007524,
+   "measured_c_ms": 38.0265849507004,
+   "compute_c_ms": 10.682584950700402,
+   "se_io_ms": 100.0,
+   "payload_bytes": 5861,
+   "ble_frames": 26,
+   "ram_bytes": 10762,
+   "mcu_nrf52840_ms": 1864.8697666664725,
+   "mcu_esp32_ms": 3051.565322664913
+  },
+  {
+   "tokens": 40,
+   "measured_ms": 68.77354208528622,
+   "ble_ms": 35.704,
+   "compute_ms": 33.06954208528623,
+   "arm_ms": 1362.1693339849319,
+   "measured_c_ms": 49.76050202650577,
+   "compute_c_ms": 14.056502026505768,
+   "se_io_ms": 133.0,
+   "payload_bytes": 7651,
+   "ble_frames": 34,
+   "ram_bytes": 14052,
+   "mcu_nrf52840_ms": 2419.702327587215,
+   "mcu_esp32_ms": 3953.461300456155
+  },
+  {
+   "tokens": 50,
+   "measured_ms": 80.21820900299214,
+   "ble_ms": 43.914,
+   "compute_ms": 36.30420900299214,
+   "arm_ms": 1679.6694933081847,
+   "measured_c_ms": 61.18883398281038,
+   "compute_c_ms": 17.274833982810378,
+   "se_io_ms": 166.0,
+   "payload_bytes": 9441,
+   "ble_frames": 41,
+   "ram_bytes": 17342,
+   "mcu_nrf52840_ms": 2974.08634869109,
+   "mcu_esp32_ms": 4852.327667629565
+  }
+ ],
+ "five_token_phase_us": {
+  "puf_boot_us": 324.3330284021795,
+  "schnorr_prove_us": 4803.999996511266,
+  "schnorr_verify_us": 9877.540986053646,
+  "ecdh_us": 144.45799752138555,
+  "encrypt_us": 28.37498323060572,
+  "decrypt_us": 12.374977814033628,
+  "cb_verify_us": 700.9170076344162,
+  "transfer_sign_us": 278.2499941531569,
+  "transfer_verify_us": 682.8339828643948,
+  "pedersen_commit_us": 2377.084019826725,
+  "pedersen_verify_us": 2321.2499800138175,
+  "hkdf_us": 39.583013858646154,
+  "compliance_us": 1.4579854905605316,
+  "token_select_us": 17.24998583085835,
+  "ble_us": 6894.0,
+  "se_io_us": 17500.0
+ },
+ "fit_measured_ms": {
+  "a": 3.6387760852615614,
+  "b": 1.1509058926090232,
+  "r2": 0.9999770155590555
+ },
+ "fit_arm_ms": {
+  "a": 57.84957474878564,
+  "b": 32.46363840726061
+ },
+ "arm_1s_threshold_first_n_above": 30,
+ "arm_1s_threshold_fit_n": 29.021713876670674,
+ "energy_5tok_J": 0.1110575205056956,
+ "tx_per_charge": 59428.66336243765,
+ "mcu": {
+  "nrf52840": {
+   "label": "nRF52840 (Arm Cortex-M4F, 64 MHz)",
+   "fit_ms": {
+    "a": 201.3006236268228,
+    "b": 55.457306707675336
+   },
+   "first_n_above_1s": 15,
+   "fit_crossing_n": 14.402058516531538,
+   "five_token_ms": 478.6095839039915,
+   "energy_5tok_J": 0.023930479195199576,
+   "tx_per_charge": 278306.16953696386,
+   "campaign_mean_ms": {
+    "mean": 490.41903307505834,
+    "std": 26.143513176276226,
+    "min": 448.36877754292084,
+    "max": 527.6866579004834
+   }
+  },
+  "esp32": {
+   "label": "ESP32 (Xtensa LX6, 240 MHz)",
+   "fit_ms": {
+    "a": 350.92464469261677,
+    "b": 90.03520389956866
+   },
+   "first_n_above_1s": 8,
+   "fit_crossing_n": 7.209128509681676,
+   "five_token_ms": 801.574370063974,
+   "energy_5tok_J": 0.400787185031987,
+   "tx_per_charge": 16617.297779789198,
+   "campaign_mean_ms": {
+    "mean": 814.8894605470497,
+    "std": 42.74360756080474,
+    "min": 745.8181775306348,
+    "max": 875.2426470623983
+   }
+  }
+ },
+ "mcu_primitives_ms": {
+  "nrf52840": {
+   "Ed25519 verify": 19.76684375,
+   "Schnorr verify": 19.76684375,
+   "ECDH (X25519)": 14.175625,
+   "Ed25519 sign": 7.750609375,
+   "Ed25519 / X25519 key derivation": 5.425390625,
+   "Schnorr prove": 7.750609375,
+   "Pedersen commit": 5.425390625,
+   "AES-256-GCM (1 KB)": 3.699421965317919,
+   "HKDF": 0.883571099861942
+  },
+  "esp32": {
+   "Ed25519 verify": 28.0,
+   "Schnorr verify": 28.0,
+   "ECDH (X25519)": 16.0,
+   "Ed25519 sign": 29.0,
+   "Ed25519 / X25519 key derivation": 29.0,
+   "Schnorr prove": 29.0,
+   "Pedersen commit": 29.0,
+   "AES-256-GCM (1 KB)": 0.577552171460801,
+   "HKDF": 0.018432516110451092
+  }
+ },
+ "ble_connect_ms": 45.0,
+ "flash_ms_5tok": {
+  "nrf52840": 14.924,
+  "esp32": 7.699999999999999
+ },
+ "host_keygen_us": 86.87502122484148,
+ "puf_reliability": {
+  "0.01": {
+   "success_rate": 100.0,
+   "avg_errors": 4.4,
+   "max_errors": 9,
+   "stable_bits": 2044,
+   "avg_boot_us": 59.829093515872955
+  },
+  "0.03": {
+   "success_rate": 100.0,
+   "avg_errors": 11.6,
+   "max_errors": 16,
+   "stable_bits": 2037,
+   "avg_boot_us": 62.233294011093676
+  },
+  "0.05": {
+   "success_rate": 100.0,
+   "avg_errors": 18.9,
+   "max_errors": 29,
+   "stable_bits": 2030,
+   "avg_boot_us": 64.52110246755183
+  },
+  "0.08": {
+   "success_rate": 100.0,
+   "avg_errors": 32.5,
+   "max_errors": 40,
+   "stable_bits": 2016,
+   "avg_boot_us": 68.5542036080733
+  },
+  "0.1": {
+   "success_rate": 90.0,
+   "avg_errors": 38.55555555555556,
+   "max_errors": 49,
+   "stable_bits": 2010,
+   "avg_boot_us": 71.7036600690335
+  }
+ },
+ "c_equiv_us": {
+  "single_scalar_mult": 41.37499490752816,
+  "double_scalar_mult": 128.70899809058756
+ }
+}

@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 import os
 import random
 import re
@@ -473,6 +474,7 @@ class TxRecord:
     token_select_us: float = 0.0
     ble_us: float = 0.0
     se_io_us: float = 0.0      # v2: analytical SE050 I/O (ARM projection only)
+    payload_bytes: int = 0     # v4: binary BLE payload bytes of all five messages
     total_us: float = 0.0
     # RAM snapshot (bytes)
     ram_bytes: int = 0
@@ -1148,6 +1150,7 @@ def run_transaction(
         token_select_us=timing.get("token_select", 0),
         ble_us=ble_total_us,
         se_io_us=se_io,
+        payload_bytes=total_payload,
         total_us=total_us,
         ram_bytes=ram,
         protocol_msgs=protocol_msgs,
@@ -1246,6 +1249,171 @@ def arm_projected_ms(rec: "TxRecord") -> float:
             + sym_us * ARM_SCALE_FACTORS["sym"]
             + rec.ble_us * ARM_SCALE_FACTORS["ble"]
             + rec.se_io_us) / 1000.0
+
+
+# ── v4: MCU projection from published per-operation timings ───────
+# The v3 projection scaled host times by 87x (ECC) and 10x (symmetric). v4 counts
+# the operations the protocol executes and costs each one with published timings
+# for the two target MCUs, then adds BLE air time, SE050 I/O, flash logging and
+# BLE connection setup.
+#
+# Elliptic-curve operations per transaction (both devices, n tokens), as executed
+# by run_transaction():
+#   PUF boot (x2 devices): 1 Ed25519 key derivation + 1 X25519 key derivation
+#   Schnorr: 2 proofs (fixed-base) + 2 verifications (double-scalar)
+#   Pedersen: commit + re-commit (fixed-base r*G; the 8-bit v*H is negligible)
+#   ECDH: 2 X25519 shared secrets
+#   per token: 1 Ed25519 signature (transfer proof) + 2 Ed25519 verifications
+#              (CB signature and transfer proof)
+def ecc_op_counts(n_tokens: int) -> Dict[str, int]:
+    return {
+        "keygen": 2 + 2,               # Ed25519 key derivation (x2) + Pedersen (x2)
+        "sign": 2 + n_tokens,          # Schnorr proofs (x2) + transfer signatures
+        "verify": 2 + 2 * n_tokens,    # Schnorr verifications (x2) + CB/transfer verify
+        "x25519_keygen": 2,            # X25519 key derivation at PUF boot
+        "x25519": 2,                   # ECDH shared secret (both sides)
+    }
+
+
+MCU_PROFILES: Dict[str, Dict[str, Any]] = {
+    "nrf52840": {
+        "label": "nRF52840 (Arm Cortex-M4F, 64 MHz)",
+        # Fujii & Aranha, "Curve25519 for the Cortex-M4 and beyond", LATINCRYPT 2017:
+        # X25519 907,240 cycles; Ed25519 keygen 347,225, sign 496,039, verify 1,265,078.
+        "keygen_ms": 347_225 / 64e3,
+        "sign_ms": 496_039 / 64e3,
+        "verify_ms": 1_265_078 / 64e3,
+        "x25519_keygen_ms": 907_240 / 64e3,
+        "x25519_ms": 907_240 / 64e3,
+        # CryptoCell-310 has no AES-256, so AES-256-GCM and (conservatively) SHA-256
+        # are costed in software: the ESP32 software throughput scaled by clock.
+        "aes_gcm_Bps": 1.038e6 * 64 / 240,
+        "sha256_Bps": 2.173e6 * 64 / 240,
+        "other_factor": 10.0 * 240 / 64,
+        "flash": {"kind": "word", "us_per_word": 41.0},   # NVMC t_WRITE per 32-bit word
+        "active_w": 0.05,   # CPU 3.3 mA + radio 4.8 mA at 3 V, plus SE050 margin
+    },
+    "esp32": {
+        "label": "ESP32 (Xtensa LX6, 240 MHz)",
+        # Oryx Embedded ESP32 crypto benchmark (CycloneCRYPTO 2.5.0, 240 MHz, software ECC):
+        # X25519 keygen 17 ms, shared secret 16 ms; Ed25519 sign 29 ms, verify 28 ms.
+        # Fixed-base Edwards operations (key derivation, Schnorr proof, Pedersen)
+        # are costed as one Ed25519 signature (upper bound).
+        "keygen_ms": 29.0,
+        "sign_ms": 29.0,
+        "verify_ms": 28.0,
+        "x25519_keygen_ms": 17.0,
+        "x25519_ms": 16.0,
+        "aes_gcm_Bps": 1.773e6,    # hardware AES-256-GCM
+        "sha256_Bps": 27.777e6,    # hardware SHA-256
+        "other_factor": 10.0,
+        "flash": {"kind": "page", "page_bytes": 256, "ms_per_page": 0.7},  # W25Q32JV tPP typ
+        "active_w": 0.5,    # ~130 mA BLE TX at 3.3 V (0.43 W), rounded up for the SE050
+    },
+}
+
+# BLE connection setup (not in v3): one advertising event at the 20 ms minimum
+# advertising interval plus the 0-10 ms advDelay, then ATT MTU exchange and data
+# length update (two connection events at the 7.5 ms connection interval).
+BLE_CONNECT_MS = 20.0 + 10.0 + 2 * 7.5
+BATTERY_J_V4 = 0.5 * 3.7 * 3600    # 500 mAh Li-ion cell at 3.7 V = 6.66 kJ
+
+
+def flash_records(n_tokens: int) -> List[int]:
+    """Size (bytes) of each flash write in one transaction (both devices).
+    TxLog entry: counterparty key, SeqNo and time (48 B) + per token TID (32 B)
+    and transfer proof (64 B). Sectors are erased when the TxLog is cleared at
+    synchronization, so no erase happens during a payment."""
+    txlog = 48 + 96 * n_tokens
+    sender = [16 + 32 * n_tokens, txlog, 16, 16]     # PREPARE, TxLog, COMMIT, COMPLETED
+    receiver = [16 + 32 * n_tokens, txlog, 16]       # RECEIVE, TxLog, COMPLETED
+    return sender + receiver
+
+
+def flash_write_ms(n_tokens: int, profile: str) -> float:
+    f = MCU_PROFILES[profile]["flash"]
+    recs = flash_records(n_tokens)
+    if f["kind"] == "page":
+        return sum(math.ceil(b / f["page_bytes"]) for b in recs) * f["ms_per_page"]
+    return sum(math.ceil(b / 4) for b in recs) * f["us_per_word"] / 1000.0
+
+
+def hashed_bytes(n_tokens: int) -> int:
+    """SHA-256 input per transaction, including HMAC blocks: 6 HKDF calls
+    (4 at PUF boot, 2 session keys) x 512 B, 2 ACK HMACs x 256 B plus the TID
+    list, 4 Schnorr challenges x 128 B, 2 PUF-key hashes x 64 B."""
+    return 6 * 512 + 2 * 256 + 4 * 128 + 2 * 64 + 2 * 32 * n_tokens
+
+
+_HOST_KEYGEN: Dict[str, float] = {}
+
+
+def host_keygen_us() -> float:
+    """Host (OpenSSL) time of one Ed25519 + one X25519 key derivation; removed
+    from puf_boot_us because v4 counts these as elliptic-curve operations."""
+    if not _HOST_KEYGEN:
+        seed = os.urandom(32)
+        raw = (serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+
+        def med(fn, n=400):
+            for _ in range(50):
+                fn()
+            ts = []
+            for _ in range(n):
+                t0 = time.perf_counter()
+                fn()
+                ts.append((time.perf_counter() - t0) * 1_000_000)
+            return statistics.median(ts)
+        _HOST_KEYGEN["ed"] = med(lambda: ed25519.Ed25519PrivateKey.from_private_bytes(seed).public_key().public_bytes(*raw))
+        _HOST_KEYGEN["x"] = med(lambda: x25519.X25519PrivateKey.from_private_bytes(seed).public_key().public_bytes(*raw))
+    return _HOST_KEYGEN["ed"] + _HOST_KEYGEN["x"]
+
+
+def mcu_breakdown_ms(rec: "TxRecord", profile: str, payload_bytes: Optional[int] = None) -> Dict[str, float]:
+    """v4: projected latency (ms) of one transaction on the given MCU, by component."""
+    p = MCU_PROFILES[profile]
+    n = rec.n_tokens
+    c = ecc_op_counts(n)
+    ecc = (c["keygen"] * p["keygen_ms"] + c["sign"] * p["sign_ms"] + c["verify"] * p["verify_ms"]
+           + c["x25519_keygen"] * p["x25519_keygen_ms"] + c["x25519"] * p["x25519_ms"])
+    pb = rec.payload_bytes if payload_bytes is None else payload_bytes
+    # AES-256-GCM over (at most) the whole payload, once to encrypt and once to decrypt
+    sym = (2 * pb / p["aes_gcm_Bps"] + hashed_bytes(n) / p["sha256_Bps"]) * 1000.0
+    other_us = (max(0.0, rec.puf_boot_us - 2 * host_keygen_us())
+                + rec.compliance_us + rec.token_select_us)
+    d = {
+        "ecc": ecc,
+        "sym": sym,
+        "other": other_us * p["other_factor"] / 1000.0,
+        "ble_air": rec.ble_us / 1000.0,
+        "se050": rec.se_io_us / 1000.0,
+        "flash": flash_write_ms(n, profile),
+        "ble_connect": BLE_CONNECT_MS,
+    }
+    d["total"] = sum(d.values())
+    return d
+
+
+def mcu_projected_ms(rec: "TxRecord", profile: str, payload_bytes: Optional[int] = None) -> float:
+    return mcu_breakdown_ms(rec, profile, payload_bytes)["total"]
+
+
+def mcu_primitive_table() -> Dict[str, Dict[str, float]]:
+    """Per-primitive MCU cost (ms) used by v4, for the paper's primitive table."""
+    out = {}
+    for prof, p in MCU_PROFILES.items():
+        out[prof] = {
+            "Ed25519 verify": p["verify_ms"],
+            "Schnorr verify": p["verify_ms"],
+            "ECDH (X25519)": p["x25519_ms"],
+            "Ed25519 sign": p["sign_ms"],
+            "Ed25519 / X25519 key derivation": max(p["keygen_ms"], p["x25519_keygen_ms"]) if prof == "esp32" else p["keygen_ms"],
+            "Schnorr prove": p["sign_ms"],
+            "Pedersen commit": p["keygen_ms"],
+            "AES-256-GCM (1 KB)": 1024 / p["aes_gcm_Bps"] * 1000,
+            "HKDF": 512 / p["sha256_Bps"] * 1000,
+        }
+    return out
 
 
 # ===================================================================
@@ -1751,6 +1919,8 @@ def run_multi_seed(config: SimulationConfig, seeds: List[int]) -> Dict[str, Any]
         succ = res.successful
         lat = [t.total_us / 1000 for t in succ]
         arm = [arm_projected_ms(t) for t in succ]
+        mcu_n = [mcu_projected_ms(t, "nrf52840") for t in succ]
+        mcu_e = [mcu_projected_ms(t, "esp32") for t in succ]
         n_tok = [t.n_tokens for t in succ]
         fb = res.failure_breakdown()
         fail_counter.update(fb)
@@ -1764,6 +1934,8 @@ def run_multi_seed(config: SimulationConfig, seeds: List[int]) -> Dict[str, Any]
             "syncs": len(res.syncs),
             "mean_latency_ms": statistics.mean(lat) if lat else 0,
             "mean_arm_ms_v2": statistics.mean(arm) if arm else 0,
+            "mean_mcu_ms_nrf52840": statistics.mean(mcu_n) if mcu_n else 0,
+            "mean_mcu_ms_esp32": statistics.mean(mcu_e) if mcu_e else 0,
             "mean_tokens": statistics.mean(n_tok) if n_tok else 0,
         })
 
@@ -1785,6 +1957,8 @@ def run_multi_seed(config: SimulationConfig, seeds: List[int]) -> Dict[str, Any]
         "syncs": agg("syncs"),
         "mean_latency_ms": agg("mean_latency_ms"),
         "mean_arm_ms_v2": agg("mean_arm_ms_v2"),
+        "mean_mcu_ms_nrf52840": agg("mean_mcu_ms_nrf52840"),
+        "mean_mcu_ms_esp32": agg("mean_mcu_ms_esp32"),
         "mean_tokens": agg("mean_tokens"),
         "failure_totals": dict(fail_counter),
     }

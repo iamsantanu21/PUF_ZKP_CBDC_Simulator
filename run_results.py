@@ -1,7 +1,8 @@
 """Collect every number the paper reports from the simulator.
 Usage: python3 run_results.py <out_dir>
-Works with the original engine and with the v3 engine (C-equivalent EC costing,
-binary wire sizes)."""
+Works with the original engine, the v3 engine (C-equivalent EC costing, binary
+wire sizes) and the v4 engine (MCU projection from published per-operation
+timings, plus flash logging and BLE connection setup)."""
 import sys, os, json, statistics, platform, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import iot_sim_engine as E
@@ -12,7 +13,9 @@ from iot_sim_engine import (SimulationConfig, run_simulation, run_multi_seed, ar
 OUT = sys.argv[1] if len(sys.argv) > 1 else "results"
 os.makedirs(OUT, exist_ok=True)
 V3 = hasattr(E, "c_equiv_scalar_mult_us")
-R = {"engine": "v3" if V3 else "original", "host": platform.platform(), "machine": platform.machine(),
+V4 = hasattr(E, "mcu_projected_ms")
+PROFILES = list(E.MCU_PROFILES) if V4 else []
+R = {"engine": "v4" if V4 else ("v3" if V3 else "original"), "host": platform.platform(), "machine": platform.machine(),
      "python": platform.python_version()}
 
 # 1) crypto primitives (Table IV)
@@ -66,9 +69,15 @@ for n in list(range(1, 16)) + [20, 30, 40, 50]:
         "ble_frames": rows[0][1].total_frames(),
         "ram_bytes": rows[0][0].ram_bytes,
     }
+    for prof in PROFILES:
+        d[f"mcu_{prof}_ms"] = med([E.mcu_projected_ms(x, prof) for x, _ in rows])
     scaling.append(d)
     if n == 5:
         five_phase = {p: med([getattr(x, p) for x, _ in rows]) for p in PH}
+        if V4:
+            R["five_token_mcu_breakdown_ms"] = {
+                prof: {k: med([E.mcu_breakdown_ms(x, prof)[k] for x, _ in rows])
+                       for k in E.mcu_breakdown_ms(rows[0][0], prof)} for prof in PROFILES}
 R["scaling"] = scaling
 R["five_token_phase_us"] = five_phase
 
@@ -93,6 +102,31 @@ five = next(d for d in scaling if d["tokens"] == 5)
 e_j = 0.5 * five["arm_ms"] / 1000
 R["energy_5tok_J"] = e_j
 R["tx_per_charge"] = 6600 / e_j
+
+# v4: per-MCU fits, 1-second crossing, energy, primitive table
+if V4:
+    R["mcu"] = {}
+    for prof in PROFILES:
+        ys_p = [d[f"mcu_{prof}_ms"] for d in scaling]
+        mp = statistics.mean(ys_p)
+        bp = sum((x - mx) * (y - mp) for x, y in zip(xs, ys_p)) / sum((x - mx) ** 2 for x in xs)
+        ap = mp - bp * mx
+        five_p = next(d for d in scaling if d["tokens"] == 5)[f"mcu_{prof}_ms"]
+        e5 = E.MCU_PROFILES[prof]["active_w"] * five_p / 1000
+        R["mcu"][prof] = {
+            "label": E.MCU_PROFILES[prof]["label"],
+            "fit_ms": {"a": ap, "b": bp},
+            "first_n_above_1s": next((d["tokens"] for d in scaling if d[f"mcu_{prof}_ms"] > 1000), None),
+            "fit_crossing_n": (1000 - ap) / bp if bp > 0 else None,
+            "five_token_ms": five_p,
+            "energy_5tok_J": e5,
+            "tx_per_charge": E.BATTERY_J_V4 / e5,
+            "campaign_mean_ms": ms[f"mean_mcu_ms_{prof}"],
+        }
+    R["mcu_primitives_ms"] = E.mcu_primitive_table()
+    R["ble_connect_ms"] = E.BLE_CONNECT_MS
+    R["flash_ms_5tok"] = {prof: E.flash_write_ms(5, prof) for prof in PROFILES}
+    R["host_keygen_us"] = E.host_keygen_us()
 
 # 4) PUF reliability (deterministic)
 rep = run_simulation(SimulationConfig())
@@ -127,5 +161,20 @@ p(f"Energy 5-token: {e_j:.3f} J -> {R['tx_per_charge']:.0f} tx per 500 mAh")
 p("PUF: " + json.dumps({k: (v['success_rate'], v['max_errors'], v['stable_bits']) for k, v in R['puf_reliability'].items()}))
 if V3:
     p(f"C-equivalent scalar-mult cost on host (us): {R['c_equiv_us']}")
+if V4:
+    p("")
+    p("v4 MCU projection (published per-operation timings + BLE air + SE050 I/O + flash + BLE connection):")
+    p("   tokens | " + " | ".join(f"{prof} ms" for prof in PROFILES))
+    for d in scaling:
+        p(f"   {d['tokens']:6d} | " + " | ".join(f"{d[f'mcu_{prof}_ms']:11.0f}" for prof in PROFILES))
+    for prof, m in R["mcu"].items():
+        p(f"{m['label']}: 5-token {m['five_token_ms']:.0f} ms; fit {m['fit_ms']['a']:.0f} + {m['fit_ms']['b']:.1f} n ms; "
+          f"first n above 1 s: {m['first_n_above_1s']} (fit {m['fit_crossing_n']:.1f}); "
+          f"campaign mean {m['campaign_mean_ms']['mean']:.0f} +/- {m['campaign_mean_ms']['std']:.0f} ms; "
+          f"energy {m['energy_5tok_J']:.3f} J -> {m['tx_per_charge']:.0f} tx per 500 mAh")
+    for prof, b in R["five_token_mcu_breakdown_ms"].items():
+        p(f"   5-token breakdown {prof} (ms): " + ", ".join(f"{k}={v:.1f}" for k, v in b.items()))
+    p("   Primitive costs (ms): " + json.dumps({k: {n: round(v, 2) for n, v in t.items()} for k, t in R["mcu_primitives_ms"].items()}))
+    p(f"   BLE connection setup {R['ble_connect_ms']} ms; flash (5 tokens): {R['flash_ms_5tok']}; host keygen {R['host_keygen_us']:.1f} us")
 open(f"{OUT}/summary.txt", "w").write("\n".join(L) + "\n")
 print("\n".join(L))

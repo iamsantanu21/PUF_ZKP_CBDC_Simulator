@@ -6,14 +6,19 @@ Since a physical ESP32 + NXP SE050 prototype was not available, the full
 protocol is simulated in Python using **real cryptographic primitives**
 (Curve25519/Ed25519, Schnorr NIZKP, Pedersen commitments, AES-256-GCM,
 SHA-256, HKDF via the OpenSSL-backed `cryptography` library) and a
-*measure-then-scale* methodology: timings are measured on the host and
-projected to ARM Cortex-M4 with per-primitive scaling factors (87× for ECC,
-10× for hardware-accelerated symmetric crypto, 1× for BLE air time).
+*measure-then-cost* methodology: the simulator runs the real protocol and
+records outcomes, operation counts and message sizes; each operation is then
+costed with published timings for the two target MCUs (nRF52840 and ESP32).
 
 **v3 (paper revision):** the pure-Python Schnorr/Pedersen code is now costed at
 the speed of the same scalar multiplications in C, and BLE air time uses the
-compact binary size of each message. A 5-token payment projects to **≈0.22 s**
-on ARM Cortex-M4 (1,386 B over BLE). See [`CHANGES_v3.md`](CHANGES_v3.md).
+compact binary size of each message. See [`CHANGES_v3.md`](CHANGES_v3.md).
+
+**v4 (current):** the 87×/10× host-scaling is replaced by published per-operation
+timings (nRF52840: Fujii & Aranha 2017 cycle counts; ESP32: Oryx Embedded
+benchmark), and flash logging and BLE connection setup are now included. A 5-token
+payment projects to **≈0.48 s on the nRF52840 and ≈0.80 s on the ESP32**
+(1,386 B over BLE). See [`CHANGES_v4.md`](CHANGES_v4.md).
 
 ## Files
 
@@ -24,8 +29,10 @@ on ARM Cortex-M4 (1,386 B over BLE). See [`CHANGES_v3.md`](CHANGES_v3.md).
 | `figure_generator.py` | General matplotlib figure export |
 | `paper_experiments.py` | One-command regeneration of the paper's result figures (fig7, fig10, fig12) + `stats.json` from the 10-seed experiment |
 | `run_results.py` | Reproduces every number reported in the paper (outcomes, crypto table, latency vs. token count, BLE size, energy, PUF) → `results.json` + `summary.txt` |
+| `CHANGES_v4.md` | What changed in v4 (MCU projection from published timings) |
 | `CHANGES_v3.md` | What changed in v3 and why, with before/after results |
-| `results_v3_mac/`, `results_original_mac/` | Paper numbers from the v3 and the original code (Apple Silicon) |
+| `results_v4_mac/` | Paper numbers from the v4 code (Apple Silicon) — used by the paper |
+| `results_v3_mac/`, `results_original_mac/` | Earlier numbers from the v3 and the original code |
 | `paper_figures_v3/` | Paper figures regenerated with v3 |
 | `paper_figures_v2/` | Previous figures + multi-seed statistics (`ms.json`) |
 | `docs/screenshots/` | Dashboard screenshots used in this README |
@@ -44,7 +51,7 @@ streamlit run dashboard.py
 python3 paper_experiments.py paper_figures_v3
 
 # Reproduce all numbers reported in the paper
-python3 run_results.py results_v3
+python3 run_results.py results_v4
 ```
 
 ## Key engine options (v2)
@@ -67,6 +74,9 @@ python3 run_results.py results_v3
   projection is kept as `arm_projected_ms_python()`.
 - `wire_size(message)` — **v3:** compact binary message size used for BLE air
   time (raw keys/proofs, 1-byte denomination, 4-byte integers).
+- `mcu_projected_ms(tx_record, "nrf52840" | "esp32")` — **v4:** projected latency
+  from published per-operation timings, plus BLE air time, SE050 I/O, flash
+  logging and BLE connection setup; `mcu_breakdown_ms()` gives the parts.
 
 ---
 
